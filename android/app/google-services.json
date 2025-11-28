@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "101548064324",
+    "project_id": "doador-sangue-44331",
+    "storage_bucket": "doador-sangue-44331.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:101548064324:android:0d0ff13fb6d9a7bdd30611",
+        "android_client_info": {
+          "package_name": "com.example.doador_sangue2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCnysoIq2Fi2GW6MyBFtVW6b6MYwuj5p2U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
