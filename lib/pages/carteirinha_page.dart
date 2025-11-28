@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
-import 'dart:html' as html; // para download de imagem no web
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -8,6 +7,11 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+
+// IMPORTAÇÃO CONDICIONAL: stub (mobile) ou web (com dart:html)
+import '../utils/carteirinha_download_stub.dart'
+    if (dart.library.html) '../utils/carteirinha_download_web.dart'
+    as download_helper;
 
 import '../models/usuario.dart';
 import '../models/doacao.dart';
@@ -35,22 +39,20 @@ class _CarteirinhaPageState extends State<CarteirinhaPage> {
     return '$d/$m/$a';
   }
 
-  // Texto que vai dentro do QR Code (é isso que aparece no leitor de QR)
+  // Texto que vai dentro do QR Code
   String get _qrData {
     final ultima = _ultimaDoacao;
-    final ultimaStr = ultima != null
-        ? _formatarData(ultima.data)
-        : 'Sem doações registradas';
-
-    return 'CARTEIRINHA DO DOADOR\n'
-        '-------------------------\n'
-        'Nome: ${usuarioAtual.nome}\n'
-        'Tipo sanguíneo: ${usuarioAtual.tipoSanguineo}\n'
-        'Código: $_codigoDoador\n'
-        'Última doação: $ultimaStr\n'
-        'Telefone: ${usuarioAtual.telefone}\n'
-        'E-mail: ${usuarioAtual.email}\n'
-        'Cidade/UF: ${usuarioAtual.localizacao}';
+    final ultimaStr =
+        ultima != null ? _formatarData(ultima.data) : 'Sem doações';
+    return '''
+Doador: ${usuarioAtual.nome}
+Tipo sanguíneo: ${usuarioAtual.tipoSanguineo}
+Telefone: ${usuarioAtual.telefone}
+E-mail: ${usuarioAtual.email}
+Localização: ${usuarioAtual.localizacao}
+Última doação: $ultimaStr
+Código: $_codigoDoador
+''';
   }
 
   // Captura o widget da carteirinha como PNG
@@ -99,19 +101,25 @@ class _CarteirinhaPageState extends State<CarteirinhaPage> {
     }
   }
 
-  // Botão "Baixar como Imagem" (download de PNG no navegador)
+  // Botão "Baixar como Imagem"
   Future<void> _baixarComoImagem() async {
     try {
       final bytes = await _capturarCarteirinha();
 
-      final blob = html.Blob([bytes], 'image/png');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-
-      final anchor = html.AnchorElement(href: url)
-        ..download = 'carteirinha_doador.png'
-        ..click();
-
-      html.Url.revokeObjectUrl(url);
+      await download_helper.baixarCarteirinhaComoImagem(
+        bytes,
+        'carteirinha_doador.png',
+      );
+    } on UnsupportedError catch (e) {
+      // Aqui cai, por exemplo, no Android (stub)
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Download de imagem não disponível nesta plataforma.\n(${e.message})',
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
